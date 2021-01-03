@@ -1,9 +1,0 @@
-//Function receives user input and calculates gear radio, output torque.
-//Pinion size and gear size are based on addendum radius of each.
-//Toruqe output and gear sizes are in Newton-meters and meters respectively.
-void torkRat(double pn, double init, double gr, double *x, double *y, double *z) {
-
-  *x = pn * init;
-  *z = gr / pn;
-  *y = (*z) * (*x);
-}
