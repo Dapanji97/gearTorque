@@ -121,7 +121,7 @@ void wheelForce() {
     //Torque at the center hub.
     wheelTorque[i] = (pTrain.g[i] * pTrain.final * Nm) / 2;
     //Force applied to contact patch.
-    //wheelForce[i] = (pTrain.g[i] * pTrain.final * Nm) / (wheelRadius * 2);
+    //wheelForce[i] = (pTrain.g[i] * pTrain.final * Nm) / (wheelRadius * 2); //Overflow warning! still working on it.
     printf("Gear %d: %.2lfNm\n", i, wheelTorque[i]);
   }
 }
