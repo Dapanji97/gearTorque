@@ -7,17 +7,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct pTrain {
+struct pTrain { //Power train specifications (actual)
   int peakTrk;
   int rpm; //This is the rpm where max torque occurs, not max rpm.
   double g[6]; //g1-5 is for each gear in a 5 speed transmission.
   double final; //Final drive or differential ratio.
 } pTrain;
 
-//function prototypes.
+struct Output { //Force output per gear.
+  double wTorque[6];
+  double wForce[6];
+} Output;
+
+//Function prototypes.
 void wheelForce();
-int wheelSize();
+double wheelSize();
 void powerCalc();
+void display();
 
 void main() {
   int i; //Used in For-loop.
@@ -33,7 +39,7 @@ void main() {
   printf("Bare in mind, values are received and given in metric standard!\n");
 
   while(choice != 3) {
-    printf("|=========================== Main menu =========================|\n");
+    printf("|========================= Main menu =========================|\n");
     printf("[1] Calculate engine power output.\n");
     printf("[2] Calculate torque at the wheel.\n");
     printf("[3] Exit.\n");
@@ -79,10 +85,10 @@ void powerCalc() {
 
 //Function that calculates wheel radius based on tire marking input by user.
 //Returns radio in millimeters.
-int wheelSize() {
+double wheelSize() {
   int aspectRatio, tireWidth, rimDiameter;
-  int height, wheelDiam;
-  int radius;
+  double height, wheelDiam;
+  double radius, r;
 
   printf("\n");
   printf("Tire size marking:"); //BUGGY! use conditional statement.
@@ -90,8 +96,9 @@ int wheelSize() {
   printf("\n");
 
   height = (aspectRatio * tireWidth) / 100;
-  wheelDiam = rimDiameter + 2 * height;
-  radius = wheelDiam / 2;
+  wheelDiam = (rimDiameter * 25.4) + 2 * height; //25.4 convert from inches to mm.
+  r = 0.95 * wheelDiam / 2;//Coefficient assumes 5% deformation due to curb weight.
+  radius = r / 1000; //For meter output.
 
   return radius;
 }
@@ -100,8 +107,7 @@ int wheelSize() {
 //through gear ratios.
 void wheelForce() {
   int i;
-  double wheelRadius, Nm;
-  double wheelTorque[6], wheelForce[6];
+  double wheelR, wheelF, Nm;
 
   printf("Max engine torque output (Nm): ");
   scanf("%lf", &Nm);
@@ -114,14 +120,26 @@ void wheelForce() {
   printf("Final drive: ");
   scanf("%lf", &pTrain.final);
 
-  wheelRadius = wheelSize();
+  wheelR = wheelSize();
 
-  printf("Force applied to the wheel:\n");
   for(i = 1; i <= 5; i++) {
     //Torque at the center hub.
-    wheelTorque[i] = (pTrain.g[i] * pTrain.final * Nm) / 2;
+    Output.wTorque[i] = (pTrain.g[i] * pTrain.final * Nm) / 2;
     //Force applied to contact patch.
-    //wheelForce[i] = (pTrain.g[i] * pTrain.final * Nm) / (wheelRadius * 2); //Overflow warning! still working on it.
-    printf("Gear %d: %.2lfNm\n", i, wheelTorque[i]);
+    Output.wForce[i] = (pTrain.g[i] * pTrain.final * Nm) / (wheelR * 2);
   }
+  display();
+}
+
+//Display and compare torque outputs.
+void display() {
+  printf("== PEAK TORQUE ===============================================|\n");
+  printf("      SCENARIO 1                   SCENARIO 2             \n");
+  printf("==============================================================|\n");
+  printf("|G1|   %.3lf Nm   %.3lf N                                 \n", Output.wTorque[1], Output.wForce[1]);
+  printf("|G2|   %.3lf Nm   %.3lf N                                 \n", Output.wTorque[2], Output.wForce[2]);
+  printf("|G3|   %.3lf Nm   %.3lf N                                 \n", Output.wTorque[3], Output.wForce[3]);
+  printf("|G4|   %.3lf Nm   %.3lf N                                 \n", Output.wTorque[4], Output.wForce[4]);
+  printf("|G5|   %.3lf Nm   %.3lf N                                 \n", Output.wTorque[5], Output.wForce[5]);
+  printf("==============================================================|\n");
 }
